@@ -21,31 +21,35 @@ class MapHandler:
         # Add a million tiles
         for x in range(2, 5):
             for y in range(2, 5):
-                self.add_collider(x, y)
+                self.add(x, y, 'collisions')
         
-        self.add(2, 4, 'wall_front', 1)
-        self.add(3, 4, 'wall_front', 1)
-        self.add(4, 4, 'wall_front', 1)
-        self.add(2, 3, 'wall_front', 0)
-        self.add(3, 3, 'wall_front', 0)
-        self.add(4, 3, 'wall_front', 0)
-        self.add(2, 2, 'wall_top', 11)
-        self.add(3, 2, 'wall_top', 11)
-        self.add(4, 2, 'wall_top', 11)
+        self.add(2, 4, 'layer1' ,'wall_front', 1)
+        self.add(3, 4, 'layer1' ,'wall_front', 1)
+        self.add(4, 4, 'layer1' ,'wall_front', 1)
+        self.add(2, 3, 'layer1' ,'wall_front', 0)
+        self.add(3, 3, 'layer1' ,'wall_front', 0)
+        self.add(4, 3, 'layer1' ,'wall_front', 0)
+        self.add(2, 2, 'layer1' ,'wall_top', 11)
+        self.add(3, 2, 'layer1' ,'wall_top', 11)
+        self.add(4, 2, 'layer1' ,'wall_top', 11)
 
-    def add(self, x: float, y: float, tile: str='wall_top', variant: int=0) -> None:
+    def add(self, x: float, y: float, layer: str='layer1', tile: str='wall_top', variant: int=0) -> None:
         """
         Add a tile to the map
         """
         
         chunk, relative_position = self.get_chunk_and_pos(x, y)
 
+        if not layer in self.layers: self.layers[layer] = {}
+
         # If the chunk does not aready exist, we make a new blank one
-        if chunk not in self.map: self.map[chunk] = {}
+        if chunk not in self.layers[layer]: self.layers[layer][chunk] = {}
         # Add the tile
-        self.map[chunk][relative_position] = Tile(tile, variant)
+        if layer == 'collisions': self.layers[layer][chunk][relative_position] = None
+        else: self.layers[layer][chunk][relative_position] = Tile(tile, variant)
+
     
-    def remove(self, x: float, y: float) -> None:
+    def remove(self, x: float, y: float, layer: str='layer1') -> None:
         """
         Remove a tile from the map
         """
@@ -99,7 +103,7 @@ class MapHandler:
 
         return chunk, relative_position
 
-    def get_tile(self, x: float, y: float) -> tuple:
+    def get_tile(self, x: float, y: float, layer: str='layer1') -> tuple:
         """
         Get the tile id and variant at a position
         """
@@ -132,19 +136,20 @@ class MapHandler:
         y_range = int((self.game.win_size[1] / self.tile_size / self.chunk_size) // 2) + 1
 
         # Loop through chunks in range
-        for chunk_x in range(-x_range, x_range + 1):
-            for chunk_y in range(-y_range, y_range + 1):
-                # Get the chunk key
-                chunk = (chunk_x + player_chunk.x, chunk_y + player_chunk.y)
-                # Skip the chunk if it doesnt exist
-                if chunk not in self.map: continue
-                # Loop through the tiles in the chunk
-                for tile in self.map[chunk]:
-                    # Get the tile pos. Subtract .5 to center tiles
-                    pos = (tile[0] + chunk[0] * self.chunk_size - cam_pos.x - .5, tile[1] + chunk[1] * self.chunk_size - cam_pos.y - .5)
-                    # Draw the tile. win_size/2 is to center the map on the screen
+        for layer in list(self.layers.values())[1:]:
+            for chunk_x in range(-x_range, x_range + 1):
+                for chunk_y in range(-y_range, y_range + 1):
+                    # Get the chunk key
+                    chunk = (chunk_x + player_chunk.x, chunk_y + player_chunk.y)
+                    # Skip the chunk if it doesnt exist
+                    if chunk not in layer: continue
+                    # Loop through the tiles in the chunk
+                    for tile in layer[chunk]:
+                        # Get the tile pos. Subtract .5 to center tiles
+                        pos = (tile[0] + chunk[0] * self.chunk_size - cam_pos.x - .5, tile[1] + chunk[1] * self.chunk_size - cam_pos.y - .5)
+                        # Draw the tile. win_size/2 is to center the map on the screen
 
-                    tile = self.map[chunk][tile]
-                    image = self.tile_handler.tiles[tile.id][tile.variant]
+                        tile = layer[chunk][tile]
+                        image = self.tile_handler.tiles[tile.id][tile.variant]
 
-                    self.game.win.blit(image, (pos[0] * self.tile_size + self.game.win_size[0]/2, pos[1] * self.tile_size + self.game.win_size[1]/2))
+                        self.game.win.blit(image, (pos[0] * self.tile_size + self.game.win_size[0]/2, pos[1] * self.tile_size + self.game.win_size[1]/2))

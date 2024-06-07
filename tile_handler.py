@@ -2,7 +2,7 @@ import pygame as pg
 from sheet_loader import load_sheet
 
 
-states = {14: 0, 62: 1, 56: 2, 248: 7, 224: 12, 227: 11, 131: 10, 143: 5, 255: 6, 254: 3, 191: 4, 251: 8, 239: 9, 7: 5, 28: 1, 138: 6, 193: 11, 30: 2, 31: 0, 15: 0, 120: 2, 124: 2, 60: 2, 240: 12, 241: 12, 225: 12, 195: 10, 199: 10, 135: 10, 207: 5, 159: 5, 126: 1, 63: 1, 249: 7, 252: 7, 231: 11, 243: 11, 223: 5, 127: 1, 253: 7, 247: 11}
+states = {14: 0, 62: 1, 56: 2, 248: 7, 224: 12, 227: 11, 131: 10, 143: 5, 255: 6, 254: 3, 191: 4, 251: 8, 239: 9, 7: 5, 28: 1, 138: 6, 193: 11, 30: 0, 31: 0, 15: 0, 120: 2, 124: 2, 60: 2, 240: 12, 241: 12, 225: 12, 195: 10, 199: 10, 135: 10, 207: 5, 159: 5, 126: 1, 63: 1, 249: 7, 252: 7, 231: 11, 243: 11, 223: 5, 127: 1, 253: 7, 247: 11}
 
 
 class Tile:
@@ -30,11 +30,19 @@ class TileHandler:
         self.tiles[name] = self.original_tiles[name].copy()
     
     def adjust_size(self, tile_size: int):
+        """
+        Adjusts all the tile images based on the tile size
+        """
+        
         for tile_type in self.original_tiles:
             for index, image in enumerate(self.original_tiles[tile_type]):
                 self.tiles[tile_type][index] = pg.transform.scale(image, (tile_size + 1, tile_size + 1))
 
     def update_tiles_in_range(self, map, id, x, y):
+        """
+        Auto tiles every neighboring tile of the same id
+        """
+        
         for rel_x in range(-1, 2):
             for rel_y in range(-1, 2):
                 if map.get_tile(x + rel_x, y + rel_y)[0] != id: continue
